@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelUtil", "ExcelUtil\ExcelUtil.csproj", "{64BF9897-734E-4C8B-85DE-A441C8658EE5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelUtilTest", "ExcelUtilTest\ExcelUtilTest.csproj", "{744DC03D-9536-484C-93C3-FA845789DE17}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelUtilExample", "ExcelUtilExample\ExcelUtilExample.csproj", "{F4CA6BD5-5184-4D1A-BFE9-A96B89E5FAA1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{64BF9897-734E-4C8B-85DE-A441C8658EE5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{64BF9897-734E-4C8B-85DE-A441C8658EE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{64BF9897-734E-4C8B-85DE-A441C8658EE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{64BF9897-734E-4C8B-85DE-A441C8658EE5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{744DC03D-9536-484C-93C3-FA845789DE17}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{744DC03D-9536-484C-93C3-FA845789DE17}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{744DC03D-9536-484C-93C3-FA845789DE17}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{744DC03D-9536-484C-93C3-FA845789DE17}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F4CA6BD5-5184-4D1A-BFE9-A96B89E5FAA1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F4CA6BD5-5184-4D1A-BFE9-A96B89E5FAA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F4CA6BD5-5184-4D1A-BFE9-A96B89E5FAA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F4CA6BD5-5184-4D1A-BFE9-A96B89E5FAA1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
