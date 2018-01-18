@@ -45,8 +45,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="EPPlusHelper.cs" />
-    <Compile Include="EPPlusProgram.cs" />
+    <Compile Include="ExcelBase.cs" />
+    <Compile Include="ExcelCodes.cs" />
+    <Compile Include="ExcelReport.cs" />
     <Compile Include="ParameterConfig.cs" />
     <Compile Include="ParameterData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -56,6 +57,7 @@
     <Content Include="vim\vim.jpg" />
     <Content Include="vim\vim_commands.txt" />
     <Content Include="vim\vim_keyboard.gif" />
+    <Content Include="vim\技巧.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -28,13 +28,13 @@ namespace ExcelUtilTest
         package.SaveAs(new MemoryStream(buffer));
       }
 
-      var helper = new EPPlusHelper();
+      var helper = new ExcelReport(new MemoryStream(buffer));
       var data = new ParameterData();
       data.Fields["string_field"] = "string field";
       data.Fields["integer_field"] = 99;
       data.Tables["list1"] = CreateTestTable();
       data.Tables["list2"] = CreateTestTable();
-      var newBuffer = helper.ExecuteTemplate(new MemoryStream(buffer), data);
+      var newBuffer = helper.ExecuteTemplate(data);
 
       using (ExcelPackage package = new ExcelPackage(new MemoryStream(newBuffer)))
       {

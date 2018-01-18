@@ -1,129 +1,62 @@
-using System.Text;
-using OfficeOpenXml;
-using OfficeOpenXml.Style;
+﻿using System;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System;
-using System.Data;
-using System.Text.RegularExpressions;
+using System.Text;
+using Microsoft.CSharp;
+using OfficeOpenXml;
+using OfficeOpenXml.Style;
 
 namespace ExcelUtil
 {
-  public class EPPlusHelper
+  public class ExcelCodes : ExcelBase
   {
-    public byte[] ExecuteTemplate(string excelFile , ParameterData data)
+    public ExcelCodes(string excelFile)
     {
-      var stream = new MemoryStream(File.ReadAllBytes(excelFile));
-      return ExecuteTemplate(stream, data);
+      this.stream = new MemoryStream(File.ReadAllBytes(excelFile));
     }
-    public byte[] ExecuteTemplate(Stream stream, ParameterData data)
+    public ExcelCodes(Stream stream)
     {
-      var newStream = new MemoryStream();
-      using(ExcelPackage package = new ExcelPackage(stream))
-      {
-        if (package != null)
-        {
-          foreach (var sheet in package.Workbook.Worksheets)
-          {
-            var addresses = GetAddressList(sheet);
-            addresses.Sort(delegate(string addr1, string addr2) {
-              return GetMaxRow(addr2).CompareTo(GetMaxRow(addr1));
-            });
-            foreach(string address in addresses)
-            {
-              string cellValue = DistinctValue(sheet.Cells[address].Value)+"";
-              Regex regex = new Regex(@"#\{[^\}]*\}");
-              if (regex.IsMatch(cellValue))
-              {
-                try
-                {
-                  bool isList = false;
-                  if (cellValue.StartsWith("#{"))
-                  {
-                      var config = ParameterConfig.CreateFromJson(cellValue.TrimStart('#'));
-                      if (config.IsSetList())
-                      {
-                        isList = true;
-                        InsertTableData(sheet, address, config.GetTableValue(data));
-                      }
-                  }
-                  if (!isList)
-                  {
-                    sheet.Cells[address].Value = regex.Replace(cellValue, delegate(Match match) {
-                      var config = ParameterConfig.CreateFromJson(match.ToString().TrimStart('#'));
-                      if (config.IsSetField())
-                      {
-                        return config.GetStringValue(data);
-                      }
-                      return match.ToString();
-                    });
-                  }
-                }
-                catch (Exception ex)
-                {
-                  sheet.Cells[address].Value = ex.Message;
-                }
-              }
-            }
-          }
-        }
-        package.SaveAs(newStream);
-      }
-      newStream.Seek(0, SeekOrigin.Begin);
-      return newStream.ToArray();
+      this.stream = stream;
     }
-    public void InsertTableData(ExcelWorksheet sheet, string address, DataTable table)
+    public string GenerateExecutableCode()
     {
-      var rowAddress = GetBelongsRowAddress(address);
-      var indexs = rowAddress.Split(':');
-      var rowStart = int.Parse(indexs[0]);
-      var rowEnd = indexs.Length>1? int.Parse(indexs[1]) : rowStart;
-      var colStart = sheet.Cells[address].Start.Column;
-      var rowCount = rowEnd - rowStart + 1;
-      var copiedRowStart = rowStart + rowCount;
-      var copiedRowEnd = rowEnd + rowCount;
+      return GenerateExecutableCode(this.stream);
+    }
+    public string GenerateCode()
+    {
+      return GenerateCode(stream);
+    }
 
-      for (int i = 0; i < table.Rows.Count-1; i++)
+    public static void ExecuteCodes(string codes){
+      CompilerParameters parameters = new CompilerParameters();
+      parameters.ReferencedAssemblies.Add("System.dll");
+      parameters.ReferencedAssemblies.Add("EPPlus.dll");
+      parameters.ReferencedAssemblies.Add("System.Drawing.dll");
+      parameters.GenerateExecutable = false;
+      parameters.GenerateInMemory = true;
+      CompilerResults results =
+        (new CSharpCodeProvider()).CompileAssemblyFromSource(parameters, codes);
+      if (results.Errors.HasErrors)
       {
-        var copiedAddress = copiedRowStart + ":" + copiedRowEnd;
-        sheet.InsertRow(rowEnd + 1, rowCount, rowEnd);
-        sheet.Cells[rowAddress].Copy(sheet.Cells[copiedAddress]);
-      }
-      var enumcell = sheet.Cells[address];
-      for (int i=0, offsetRow=0; i<table.Rows.Count; i++)
-      {
-        for (int j = 0, offsetCol = 0; j < table.Columns.Count; j++)
+        foreach(CompilerError error in results.Errors)
         {
-          var dataCell = sheet.Cells[rowStart+offsetRow+i, colStart+offsetCol+j];
-          dataCell.Value = table.Rows[i][j];
-          var mergeCell = sheet.MergedCells[rowStart+offsetRow+i, colStart+offsetCol+j];
-          if(dataCell.Merge)
-          {
-            //offset += GetColNextMergeCount(sheet, dataCell);
-            offsetCol += sheet.Cells[mergeCell].End.Column - dataCell.End.Column;
-            offsetRow += sheet.Cells[mergeCell].End.Row - dataCell.End.Row;
-          }
+          Console.WriteLine(error.ToString());
         }
       }
-    }
-    public int GetColNextMergeCount(ExcelWorksheet sheet, ExcelAddress cell)
-    {
-      var nextCell = sheet.Cells[cell.Start.Row, cell.Start.Column + 1];
-      var count = 0;
-      while (nextCell.Merge)
+      else
       {
-        count ++;
-        nextCell = sheet.Cells[nextCell.Start.Row, nextCell.Start.Column + 1];
+        Type type = results.CompiledAssembly.GetType("DynamicCodes.CodeWrapper");
+        type.GetMethod("Execute").Invoke(null, null);
       }
-      return count;
     }
-    public string GenerateExecutableCode(string excelFile)
+    public static string GenerateExecutableCode(string excelFile)
     {
       var stream = new MemoryStream(File.ReadAllBytes(excelFile));
       return GenerateExecutableCode(stream);
     }
-    public string GenerateExecutableCode(Stream stream)
+    public static string GenerateExecutableCode(Stream stream)
     {
       return
       @"using System;
@@ -146,12 +79,12 @@ namespace ExcelUtil
         }
       ";
     }
-    public string GenerateCode(string excelFile)
+    public static string GenerateCode(string excelFile)
     {
       var stream = new MemoryStream(File.ReadAllBytes(excelFile));
       return GenerateCode(stream);
     }
-    public string GenerateCode(Stream stream)
+    public static string GenerateCode(Stream stream)
     {
       StringBuilder code = new StringBuilder();
       using(ExcelPackage package = new ExcelPackage(stream))
@@ -163,6 +96,8 @@ namespace ExcelUtil
           {
             string codeCreateSheet =
               "sheet = package.Workbook.Worksheets.Add(\"{0}\");";
+
+            if (sheet.Dimension == null) continue;
             code.AppendLine(string.Format(codeCreateSheet, sheet.Name));
             for(int i=sheet.Dimension.Start.Row; i<=sheet.Dimension.End.Row; i++)
             {
@@ -194,15 +129,11 @@ namespace ExcelUtil
       }
       return code.ToString();
     }
-    public string GenerateRowStyleCodes(ExcelRow row)
-    {
-      return GenerateStyleCodes("sheet.Row("+row.Row+")", row.Style);
-    }
-    public string GenerateCellStyleCodes(ExcelRange range)
+    static string GenerateCellStyleCodes(ExcelRange range)
     {
       return GenerateStyleCodes("sheet.Cells[\"" + range.Address + "\"]", range.Style);
     }
-    public string GenerateStyleCodes(string stylePrefix, ExcelStyle style)
+    static string GenerateStyleCodes(string stylePrefix, ExcelStyle style)
     {
       StringBuilder codes = new StringBuilder();
       string codeFormat;
@@ -293,73 +224,14 @@ namespace ExcelUtil
 
       return codes.ToString();
     }
-    public string RgbToParameters(string rgb)
+    static string RgbToParameters(string rgb)
     {
       //AARRGGBB -> 0xAA, 0xRR, 0xGG, 0xBB
       return rgb.Insert(6, ", 0x").Insert(4, ", 0x").Insert(2, ", 0x").Insert(0, "0x");
     }
-    public string EncodeCodeString(string codes)
+    static string EncodeCodeString(string codes)
     {
       return codes.Replace(@"\", @"\\").Replace("\"", "\\\"");
-    }
-    public List<string> GetAddressList(ExcelWorksheet sheet)
-    {
-      List<string> addressList = new List<string>();
-      foreach(var address in sheet.MergedCells)
-      {
-        addressList.Add(address);
-      }
-      foreach(var range in sheet.Cells)
-      {
-        if (range.Merge) continue;
-        addressList.Add(range.Address);
-      }
-      return addressList;
-    }
-    public string GetBelongsRowAddress(string address)
-    {
-      string[] cells = address.Split(':');
-      string rowAddres = "";
-      if (cells.Length >= 1)
-      {
-        rowAddres += GetRow(cells[0]);
-      }
-      if (cells.Length == 2)
-      {
-        rowAddres += ":" + GetRow(cells[1]);
-      }
-      else
-      {
-        rowAddres += ":" + GetRow(cells[0]);
-      }
-      return rowAddres;
-    }
-    public int GetMaxRow(string address)
-    {
-      string [] cells = address.Split(':');
-      string cell = cells.Count() > 1? cells[1] : cells[0];
-
-      return GetRow(cell);
-    }
-    public int GetRow(string singleCellAddress)
-    {
-      var chars = singleCellAddress.ToCharArray();
-      for (int i = 0; i < chars.Length; i++)
-      {
-        if (chars[i] >= '0' && chars[i] <= '9')
-        {
-          return int.Parse(singleCellAddress.Substring(i));
-        }
-      }
-      return 0;
-    }
-    public object DistinctValue(object val)
-    {
-      var arr = val as object[,];
-      if (arr != null && arr.GetLength(0) > 0 && arr.GetLength(1) > 0)
-        return arr[0,0];
-      else
-        return val;
     }
   }
 }

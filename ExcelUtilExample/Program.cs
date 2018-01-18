@@ -13,14 +13,14 @@ namespace ExcelUtilExample
   {
     static void Main(string[] args)
     {
-      EPPlusHelper helper = new EPPlusHelper();
+      ExcelReport report = new ExcelReport("template.xlsx");
       ParameterData data1 = new ParameterData();
       data1.Fields["string_field"] = "字符串字段显示";
       data1.Fields["integer_field"] = "整数字段显示";
       data1.Tables["list1"] = CreateTestTable();
       data1.Tables["list2"] = CreateTestTable();
 
-      ExcelPackage package1 = new ExcelPackage(new MemoryStream(helper.ExecuteTemplate("template.xlsx", data1)));
+      ExcelPackage package1 = new ExcelPackage(new MemoryStream(report.ExecuteTemplate(data1)));
       using (Stream stream = new FileStream("out.xlsx", FileMode.Create))
       {
         package1.SaveAs(stream);
@@ -33,13 +33,17 @@ namespace ExcelUtilExample
       data1.Fields["guanliyuan"] = "管理员1";
       data1.Tables["fankuibiao"] = CreateTestTable();
 
-      ExcelPackage package2 = new ExcelPackage(new MemoryStream(helper.ExecuteTemplate("template2.xlsx", data1)));
+      report = new ExcelReport("template2.xlsx");
+      ExcelPackage package2 = new ExcelPackage(new MemoryStream(report.ExecuteTemplate(data1)));
       using (Stream stream = new FileStream("out2.xlsx", FileMode.Create))
       {
         package2.SaveAs(stream);
       }
 
-
+      ExcelCodes codes = new ExcelCodes("template.xlsx");
+      StreamWriter writer = new StreamWriter("CSharpCodes.cs");
+      writer.Write(codes.GenerateExecutableCode());
+      writer.Close();
     }  
     public static DataTable CreateTestTable()
     {
